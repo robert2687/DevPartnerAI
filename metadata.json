@@ -1,0 +1,8 @@
+{
+  "name": "DevPartner AI",
+  "description": "Professional AI Programming Partner providing complete production-ready code, educational step-by-step logic, and interactive sandboxed execution.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
