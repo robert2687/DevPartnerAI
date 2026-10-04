@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Copy, Check, Play, BookOpen, ExternalLink } from 'lucide-react';
+import { Copy, Check, Play, BookOpen, ExternalLink, Eye } from 'lucide-react';
 
 interface MarkdownRendererProps {
   content: string;
@@ -130,11 +130,15 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                 {isRunnable && onRunInSandbox && (
                   <button
                     onClick={() => onRunInSandbox(seg.content, seg.language || '')}
-                    className="px-2 py-1 text-emerald-400 hover:text-emerald-300 hover:bg-neutral-800 rounded flex items-center gap-1 transition-colors"
-                    title="Run code in interactive sandbox"
+                    className={`px-2 py-1 rounded flex items-center gap-1 transition-colors ${
+                      seg.language === 'html'
+                        ? 'text-sky-400 hover:text-sky-300 hover:bg-neutral-800'
+                        : 'text-emerald-400 hover:text-emerald-300 hover:bg-neutral-800'
+                    }`}
+                    title={seg.language === 'html' ? 'Open Live Visual Preview' : 'Run code in interactive sandbox'}
                   >
-                    <Play className="w-3 h-3" />
-                    <span className="hidden sm:inline">Run</span>
+                    {seg.language === 'html' ? <Eye className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+                    <span className="hidden sm:inline">{seg.language === 'html' ? 'Live Preview' : 'Run'}</span>
                   </button>
                 )}
 

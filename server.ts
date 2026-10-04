@@ -546,7 +546,10 @@ async function startServer() {
 
       const repoData = await createRes.json();
       if (!createRes.ok) {
-        res.status(createRes.status).json({ error: repoData.message || 'Failed to create repo' });
+        const errorDetail = Array.isArray(repoData.errors) && repoData.errors[0]?.message
+          ? `${repoData.message}: ${repoData.errors[0].message}`
+          : repoData.message || 'Failed to create repo';
+        res.status(createRes.status).json({ error: errorDetail });
         return;
       }
 
@@ -589,6 +592,11 @@ async function startServer() {
       const error = err as Error;
       res.status(500).json({ error: error.message });
     }
+  });
+
+  // Ensure any unmatched /api/* route returns a JSON 404 instead of falling through to Vite's index.html SPA
+  app.all('/api/*', (req: Request, res: Response) => {
+    res.status(404).json({ error: `API endpoint ${req.method} ${req.path} not found` });
   });
 
   // Dev vs Prod Vite mounting

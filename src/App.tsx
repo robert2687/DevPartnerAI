@@ -14,6 +14,8 @@ import { PromptLibraryModal } from './components/PromptLibraryModal.tsx';
 import { EnvironmentModal } from './components/EnvironmentModal.tsx';
 import { ExplanationDrawer } from './components/ExplanationDrawer.tsx';
 import { GitHubModal } from './components/GitHubModal.tsx';
+import { FullAppModal } from './components/FullAppModal.tsx';
+import { FullAppTemplate } from './data/fullAppTemplates.ts';
 import { Message, CodeArtifact, UserProfile, WorkflowStep } from './types.ts';
 import { extractCodeArtifacts, detectWorkflowStep } from './utils/codeParser.ts';
 import { MessageSquare, Code2 } from 'lucide-react';
@@ -81,6 +83,7 @@ export default function App() {
   const [isPromptLibraryOpen, setIsPromptLibraryOpen] = useState(false);
   const [isExplanationDrawerOpen, setIsExplanationDrawerOpen] = useState(false);
   const [isGitHubModalOpen, setIsGitHubModalOpen] = useState(false);
+  const [isFullAppModalOpen, setIsFullAppModalOpen] = useState(false);
   const [explanationSnippet, setExplanationSnippet] = useState<{ code: string; language: string }>({
     code: '',
     language: 'typescript',
@@ -399,6 +402,71 @@ export default function App() {
     setIsExplanationDrawerOpen(true);
   };
 
+  // Load a complete multi-file application template into Code Studio
+  const handleLoadFullAppTemplate = (template: FullAppTemplate, pushToGitHub = false) => {
+    const newArtifacts: CodeArtifact[] = template.files.map((file, idx) => ({
+      id: `artifact-${Date.now()}-${idx}`,
+      filename: file.filename,
+      language: file.language,
+      code: file.code,
+      timestamp: Date.now(),
+    }));
+
+    setArtifacts(newArtifacts);
+    if (newArtifacts.length > 0) {
+      setActiveArtifactId(newArtifacts[0].id);
+    }
+    setIsFullAppModalOpen(false);
+    setActiveView('workspace');
+    setMobilePane('code');
+
+    if (pushToGitHub) {
+      setIsGitHubModalOpen(true);
+    }
+  };
+
+  // Custom Full Application Generation from Natural Language Prompt
+  const handleGenerateCustomApp = (prompt: string) => {
+    setIsFullAppModalOpen(false);
+    setActiveView('workspace');
+    handleSendMessage(
+      `Architect and build a complete production-grade multi-file application for: "${prompt}".\n\nPlease provide all necessary files with file names formatted as code blocks (e.g. index.html, style.css, script.js, package.json, README.md).`
+    );
+  };
+
+  // Batch import files from GitHub repository explorer into Code Studio
+  const handleImportArtifacts = (
+    importedFiles: { filename: string; language: string; code: string }[],
+    replaceAll = false
+  ) => {
+    const newArtifacts: CodeArtifact[] = importedFiles.map((file, idx) => ({
+      id: `artifact-${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 4)}`,
+      filename: file.filename,
+      language: file.language,
+      code: file.code,
+      timestamp: Date.now(),
+    }));
+
+    if (replaceAll) {
+      setArtifacts(newArtifacts);
+      if (newArtifacts.length > 0) {
+        setActiveArtifactId(newArtifacts[0].id);
+      }
+    } else {
+      setArtifacts((prev) => {
+        const incomingNames = new Set(newArtifacts.map((a) => a.filename));
+        const retained = prev.filter((a) => !incomingNames.has(a.filename));
+        return [...retained, ...newArtifacts];
+      });
+      if (newArtifacts.length > 0) {
+        setActiveArtifactId(newArtifacts[0].id);
+      }
+    }
+
+    setActiveView('workspace');
+    setMobilePane('code');
+  };
+
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-neutral-950 text-neutral-100 font-sans">
       {/* Top Bar Navigation */}
@@ -415,6 +483,7 @@ export default function App() {
         onExportProject={handleExportProject}
         onOpenSettings={() => setIsEnvironmentModalOpen(true)}
         onOpenGitHub={() => setIsGitHubModalOpen(true)}
+        onOpenFullAppModal={() => setIsFullAppModalOpen(true)}
         hasArtifacts={artifacts.length > 0}
         isGitHubConnected={Boolean(localStorage.getItem('devpartner_gh_token'))}
       />
@@ -531,6 +600,7 @@ export default function App() {
                   }}
                   onExplainCode={handleExplainCode}
                   onOpenGitHub={() => setIsGitHubModalOpen(true)}
+                  onOpenFullAppModal={() => setIsFullAppModalOpen(true)}
                 />
               </div>
             </div>
@@ -565,11 +635,21 @@ export default function App() {
         onUpdateProfile={(updated) => setUserProfile(updated)}
       />
 
-      {/* GitHub Integration Modal */}
+      {/* GitHub Integration & Repository Explorer Modal */}
       <GitHubModal
         isOpen={isGitHubModalOpen}
         onClose={() => setIsGitHubModalOpen(false)}
         artifacts={artifacts}
+        activeArtifactId={activeArtifactId}
+        onImportArtifacts={handleImportArtifacts}
+      />
+
+      {/* Create Full Application Modal */}
+      <FullAppModal
+        isOpen={isFullAppModalOpen}
+        onClose={() => setIsFullAppModalOpen(false)}
+        onLoadTemplate={handleLoadFullAppTemplate}
+        onGenerateCustomApp={handleGenerateCustomApp}
       />
     </div>
   );

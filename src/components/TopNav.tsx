@@ -1,5 +1,5 @@
 import React from 'react';
-import { Download, RotateCcw, Settings, Terminal, Compass, BookOpen, FolderGit2 } from 'lucide-react';
+import { Download, RotateCcw, Settings, Terminal, Compass, BookOpen, FolderGit2, Layers } from 'lucide-react';
 
 interface TopNavProps {
   activeView: 'workspace' | 'workflow' | 'debugger' | 'prompts';
@@ -8,6 +8,7 @@ interface TopNavProps {
   onExportProject: () => void;
   onOpenSettings: () => void;
   onOpenGitHub: () => void;
+  onOpenFullAppModal?: () => void;
   hasArtifacts: boolean;
   isGitHubConnected: boolean;
 }
@@ -19,6 +20,7 @@ export const TopNav: React.FC<TopNavProps> = ({
   onExportProject,
   onOpenSettings,
   onOpenGitHub,
+  onOpenFullAppModal,
   hasArtifacts,
   isGitHubConnected,
 }) => {
@@ -88,14 +90,30 @@ export const TopNav: React.FC<TopNavProps> = ({
           <span>Prompt Library</span>
         </button>
 
+        {onOpenFullAppModal && (
+          <button
+            onClick={onOpenFullAppModal}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 transition-all whitespace-nowrap font-medium text-xs shadow-sm hover:border-sky-500/50"
+            title="Create full multi-file application from templates or prompt"
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span>Create Full App</span>
+          </button>
+        )}
+
         <button
           onClick={onOpenGitHub}
-          className="flex items-center gap-1.5 hover:text-neutral-200 transition-colors whitespace-nowrap relative"
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all whitespace-nowrap ${
+            isGitHubConnected
+              ? 'bg-emerald-950/40 hover:bg-emerald-900/60 border-emerald-800/80 text-emerald-300'
+              : 'bg-neutral-900 hover:bg-neutral-850 border-neutral-700 text-neutral-200 hover:text-white'
+          }`}
+          title={isGitHubConnected ? 'Manage connected GitHub repositories' : 'Connect your GitHub account to push & pull repositories'}
         >
-          <FolderGit2 className="w-3.5 h-3.5 text-neutral-300" />
-          <span>GitHub</span>
+          <FolderGit2 className={`w-3.5 h-3.5 ${isGitHubConnected ? 'text-emerald-400' : 'text-sky-400'}`} />
+          <span>{isGitHubConnected ? 'GitHub Repositories' : 'Connect to GitHub'}</span>
           {isGitHubConnected && (
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 ring-2 ring-neutral-950"></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
           )}
         </button>
 
